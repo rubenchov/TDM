@@ -7,10 +7,11 @@ Download all the zip files and store them according to the paths in the python f
 
 To run locally, update the paths to local and use the file "visibilitygammaanalysis.py"
 
-Modules versions are:
-mahotas (1.4.18)
-opencv (4.12.0)
-numpy (2.0.2)
-pandas (2.2.2)
-matplotlib (3.10.0)
-seaborn (0.13.2)
+REQUIREMENTS <br />
+Modules versions are: <br />
+mahotas (1.4.18) <br />
+opencv (4.12.0) <br />
+numpy (2.0.2) <br />
+pandas (2.2.2) <br />
+matplotlib (3.10.0) <br />
+seaborn (0.13.2) <br />
