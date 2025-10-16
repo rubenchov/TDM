@@ -419,48 +419,31 @@ df_calc.rename(columns={'0': 'Contrast'}, inplace=True)
 df_calc.rename(columns={'1': 'Variance'}, inplace=True)
 df_calc.head()
 
-"""Divide by maximum value of images (in this case 255)"""
-
-df_overmax = df_calc.copy()
-
-df_overmax['Contrast'] = df_overmax['Contrast'] / 255
-df_overmax['Variance'] = df_overmax['Variance'] / 255
-df_overmax.head()
-
 """Apply sigmoid function"""
 
-df_sigmoid = df_overmax.copy()
+df_norm = df_calc.copy()
 
-#Sigmoid function for Contrast measurement with mu=(last element of Contrast colum)/4 and shape=5
-mu = df_sigmoid["Contrast"].iloc[-1]
-print('Contrast - Mu from gamma reference image: ', mu)
-shape = 5
-df_sigmoid['Contrast'] = 1 / (1 + np.exp(-(df_sigmoid["Contrast"] - (mu / 4)) / shape))
+#Max value taken from Gamma is last element of Contrast colum)
+max = df_norm["Contrast"].iloc[-1]
+df_norm['Contrast'] = df_norm['Contrast'] / max
 
-#Sigmoid function for Variance measurement with mu=(last element of Variance colum)/4 and shape=5
-mu = df_sigmoid["Variance"].iloc[-1]
-print('Variance - Mu from gamma reference image: ', mu)
-shape = 5
-df_sigmoid['Variance'] = 1 / (1 + np.exp(-(df_sigmoid["Variance"] - (mu / 4)) / shape))
+#Max value taken from Gamma is last element of Variance colum)
+max = df_norm["Variance"].iloc[-1]
+df_norm['Variance'] = df_norm['Variance'] / max
 
-#Sigmoid function for JSD measurement with mu=(last element of JSD colum)/4 and shape=1
-
-mu = df_sigmoid["jsd"].iloc[-1]
-print('JSD - Mu from gamma reference image: ', mu)
-shape = 1
-df_sigmoid['jsd'] = 1 / (1 + np.exp(-(df_sigmoid["jsd"] - (mu / 4)) / shape))
-#Result = (Result - 0.5) * 2
-df_sigmoid['jsd'] = (df_sigmoid['jsd'] - 0.5) * 2
-df_sigmoid.head()
+#Normalize JS column. Saturate in Djs=5 and divide by 5
+df_norm["jsd"][df_norm["jsd"] > 5] = 5
+df_norm['jsd'] = df_norm['jsd'] / 5
+df_norm.tail()
 
 """TDM final calculation"""
 
 #Create the new 'Metric' column
 
-df_tdm = df_sigmoid.copy()
+df_tdm = df_norm.copy()
 
-wc, wv, wd = 0.25, 0.25, 0.5
-df_tdm['Metric'] = wc *  df_tdm['Contrast'] + wv * df_tdm['Variance'] + wd * (1 - df_tdm['jsd'])
-df_tdm['Metric'] = df_tdm['Metric'] / (wc + wv + wd)
-df_tdm.head()
+alpha = 0.5
+
+df_tdm['Metric'] = 0.5 * alpha * (df_tdm['Contrast'] + df_tdm['Variance']) + (1 - alpha) * (1 - df_tdm['jsd'])
 df_tdm.to_csv(path + 'Imgs_paper/' + 'tdm_final.csv')
+df_tdm.head()
